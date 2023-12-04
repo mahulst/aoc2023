@@ -43,7 +43,47 @@ fn part_1(input: &str) -> usize {
         .sum()
 }
 fn part_2(input: &str) -> usize {
-    0
+    let mut symbols: HashMap<(isize, isize), Symbols> = HashMap::new();
+    let mut parts: HashMap<(isize, isize), usize> = HashMap::new();
+    parse(input, &mut parts, &mut symbols);
+    let mut gear_power = 0;
+    symbols.iter().for_each(|((x, y), _)| {
+        let mut gear_parts = vec![];
+        for i in x - 1..=x + 1 {
+            for j in y - 1..=y + 1 {
+                println!("checking {},{}", i, j);
+                if let Some(part) = parts.get(&(i, j)) {
+                    let len = part.to_string().len() as isize;
+                    gear_parts.push(part);
+                }
+            }
+        }
+        for j in y - 1..=y + 1 {
+            let i = x - 2;
+            println!("checking {},{}", i, j);
+            if let Some(part) = parts.get(&(i, j)) {
+                let len = part.to_string().len() as isize;
+                if len >= 2 {
+                    gear_parts.push(part);
+                }
+            }
+        }
+        for j in y - 1..=y + 1 {
+            let i = x - 3;
+            println!("checking {},{}", i, j);
+            if let Some(part) = parts.get(&(i, j)) {
+                let len = part.to_string().len() as isize;
+                if len > 2 {
+                    gear_parts.push(part);
+                }
+            }
+        }
+        if gear_parts.len() == 2 {
+            let a: usize = gear_parts.into_iter().product();
+            gear_power += a;
+        }
+    });
+    gear_power
 }
 #[derive(PartialEq, Eq, Debug)]
 enum Symbols {
@@ -51,12 +91,7 @@ enum Symbols {
     NoSymbol,
 }
 fn dot(input: &str) -> IResult<&str, usize> {
-    let (result, _) = many0(tag("."))(input)?;
-    Ok((result, input.len() - result.len()))
-}
-fn symbol(input: &str) -> IResult<&str, Symbols> {
-    let (result, _) = alt((
-        char('*'),
+    let (result, _) = many0(alt((
         char('+'),
         char('#'),
         char('/'),
@@ -67,7 +102,12 @@ fn symbol(input: &str) -> IResult<&str, Symbols> {
         char('&'),
         char('-'),
         char('\\'),
-    ))(input)?;
+        char('.'),
+    )))(input)?;
+    Ok((result, input.len() - result.len()))
+}
+fn symbol(input: &str) -> IResult<&str, Symbols> {
+    let (result, _) = alt((char('*'),))(input)?;
 
     Ok((input, Symbols::Symbol))
 }
@@ -170,5 +210,19 @@ mod tests {
     }
 
     #[test]
-    fn test_day_2() {}
+    fn test_day_2() {
+        let input = "467..114..
+...*......
+..35..633.
+......#...
+617*......
+.....+.58.
+..592.....
+......755.
+...$.*....
+.664.598..";
+
+        let result = part_2(input);
+        assert_eq!(result, 467835);
+    }
 }
